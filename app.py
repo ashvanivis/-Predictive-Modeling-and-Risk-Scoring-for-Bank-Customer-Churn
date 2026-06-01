@@ -4,6 +4,10 @@ import pandas as pd
 import joblib
 import plotly.graph_objects as go
 import plotly.express as px
+import zipfile
+# Unzip the model file
+with zipfile.ZipFile('churn_model.zip', 'r') as zip_ref:
+    zip_ref.extractall()
 model = joblib.load(
     r"./churn_model.pkl"
 )
