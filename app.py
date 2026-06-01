@@ -21,40 +21,10 @@ st.set_page_config(
     layout="wide"
 )
 
+
 # =====================================
 # CUSTOM CSS
 # =====================================
-st.markdown("""
-<style>
-
-.main {
-    background-color: #F5F7FA;
-}
-
-.block-container {
-    padding-top: 1rem;
-}
-
-.kpi-card {
-    background-color: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
-}
-
-h1,h2,h3 {
-    color: #1E3A8A;
-}
-
-[data-testid="stMetric"] {
-    background-color: white;
-    border-radius: 12px;
-    padding: 15px;
-    box-shadow: 0px 4px 10px rgba(0,0,0,0.08);
-}
-
-</style>
-""", unsafe_allow_html=True)
 
 # =====================================
 # HEADER
@@ -208,17 +178,13 @@ input_df = pd.DataFrame({
 
 if predict_btn:
 
-    st.session_state.probability = model.predict_proba(
-        input_df
-    )[0][1]
+    st.session_state.probability = model.predict_proba(input_df)[0][1]
 
-    prediction = model.predict(
-        input_df
-    )[0]
+    prediction = model.predict(input_df)[0]
 
-    # -------------------------
+    # =========================
     # TAB 1
-    # -------------------------
+    # =========================
 
     with tab1:
 
@@ -227,22 +193,70 @@ if predict_btn:
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.metric(
-                "Churn Probability",
-                f"{st.session_state.probability:.2%}"
-            )
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #60A5FA, #3B82F6);
+                padding:25px;
+                border-radius:18px;
+                box-shadow:0 8px 20px rgba(0,0,0,0.15);">
+                <div style="
+                    color:white;
+                    font-size:15px;
+                    opacity:0.9;">
+                    Churn Probability
+                </div>
+                <div style="
+                    color:white;
+                    font-size:38px;
+                    font-weight:bold;">
+                    {st.session_state.probability:.2%}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         with col2:
-            st.metric(
-                "Prediction",
-                "Churn" if prediction == 1 else "Retain"
-            )
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #34D399, #10B981);
+                padding:25px;
+                border-radius:18px;
+                box-shadow:0 8px 20px rgba(0,0,0,0.15);">
+                <div style="
+                    color:white;
+                    font-size:15px;
+                    opacity:0.9;">
+                    Prediction
+                </div>
+                <div style="
+                    color:white;
+                    font-size:38px;
+                    font-weight:bold;">
+                    {"Churn" if prediction == 1 else "Retain"}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         with col3:
-            st.metric(
-                "Retention Score",
-                f"{(1-st.session_state.probability):.2%}"
-            )
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #F472B6, #EC4899);
+                padding:25px;
+                border-radius:18px;
+                box-shadow:0 8px 20px rgba(0,0,0,0.15);">
+                <div style="
+                    color:white;
+                    font-size:15px;
+                    opacity:0.9;">
+                    Retention Score
+                </div>
+                <div style="
+                    color:white;
+                    font-size:38px;
+                    font-weight:bold;">
+                    {(1-st.session_state.probability):.2%}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         st.markdown("---")
 
@@ -256,38 +270,38 @@ if predict_btn:
             st.error("🔴 High Risk Customer")
 
         st.info(f"""
-### Customer Summary
+    ### Customer Summary
 
-- Age: {age}
-- Credit Score: {credit_score}
-- Products: {products}
-- Geography: {geography}
-- Active Member: {'Yes' if active_member else 'No'}
+    - Age: {age}
+    - Credit Score: {credit_score}
+    - Products: {products}
+    - Geography: {geography}
+    - Active Member: {'Yes' if active_member else 'No'}
         """)
 
         st.subheader("🎯 Retention Recommendations")
 
         if st.session_state.probability > 0.60:
             st.error("""
-• Offer Loyalty Rewards
+    • Offer Loyalty Rewards
 
-• Assign Relationship Manager
+    • Assign Relationship Manager
 
-• Personalized Retention Campaign
+    • Personalized Retention Campaign
             """)
 
         elif st.session_state.probability > 0.30:
             st.warning("""
-• Increase Customer Engagement
+    • Increase Customer Engagement
 
-• Offer Additional Banking Products
+    • Offer Additional Banking Products
             """)
 
         else:
             st.success("""
-• Customer Likely To Stay
+    • Customer Likely To Stay
 
-• Continue Standard Engagement
+    • Continue Standard Engagement
             """)
 
     # -------------------------
