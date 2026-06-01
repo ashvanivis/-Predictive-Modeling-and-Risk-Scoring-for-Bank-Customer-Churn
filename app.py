@@ -5,7 +5,7 @@ import joblib
 import plotly.graph_objects as go
 import plotly.express as px
 model = joblib.load(
-    r"churn_model.pkl"
+    r"./churn_model.pkl"
 )
 
 # =====================================
