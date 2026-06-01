@@ -44,8 +44,8 @@ st.sidebar.header("Customer Information")
 year = st.sidebar.slider(
     "Year",
     2020,
-    2023,
-    2021
+    2025,
+    2022
 )
 
 credit_score = st.sidebar.slider(
