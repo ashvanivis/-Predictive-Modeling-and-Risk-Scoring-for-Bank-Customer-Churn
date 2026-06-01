@@ -15,38 +15,72 @@ model = joblib.load(
 # =====================================
 # PAGE CONFIG
 # =====================================
-
 st.set_page_config(
-    page_title="Bank Customer Churn Prediction",
+    page_title="Bank Customer Churn Intelligence Dashboard",
     page_icon="🏦",
     layout="wide"
 )
 
-# Initialize session state for probability
-if "probability" not in st.session_state:
-    st.session_state.probability = None
+# =====================================
+# CUSTOM CSS
+# =====================================
+st.markdown("""
+<style>
+
+.main {
+    background-color: #F5F7FA;
+}
+
+.block-container {
+    padding-top: 1rem;
+}
+
+.kpi-card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+}
+
+h1,h2,h3 {
+    color: #1E3A8A;
+}
+
+[data-testid="stMetric"] {
+    background-color: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.08);
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # =====================================
 # HEADER
 # =====================================
 
-st.title("🏦 Bank Customer Churn Prediction Dashboard")
-st.markdown(
-    "Predict customer churn risk and analyze factors influencing customer retention."
-)
+st.markdown("""
+<h1 style='text-align:center'>
+🏦 Bank Customer Churn Intelligence Dashboard
+</h1>
+
+<p style='text-align:center;color:gray;font-size:18px'>
+AI-Powered Customer Retention & Risk Analytics
+</p>
+""", unsafe_allow_html=True)
+
+st.markdown("---")
 
 # =====================================
-# SIDEBAR INPUTS
+# SIDEBAR
 # =====================================
 
-st.sidebar.header("Customer Information")
+st.sidebar.title("👤 Customer Profile")
 
-year = st.sidebar.slider(
-    "Year",
-    2020,
-    2029,
-    2025
-)
+st.sidebar.markdown("---")
+
+year = st.sidebar.slider("Year", 2020, 2029, 2025)
 
 credit_score = st.sidebar.slider(
     "Credit Score",
@@ -83,27 +117,46 @@ salary = st.sidebar.number_input(
 
 products = st.sidebar.selectbox(
     "Number of Products",
-    [1, 2, 3, 4]
+    [1,2,3,4]
 )
 
 has_card = st.sidebar.selectbox(
     "Has Credit Card",
-    [0, 1]
+    [0,1]
 )
 
 active_member = st.sidebar.selectbox(
     "Active Member",
-    [0, 1]
+    [0,1]
 )
 
 gender = st.sidebar.selectbox(
     "Gender",
-    ["Male", "Female"]
+    ["Male","Female"]
 )
 
 geography = st.sidebar.selectbox(
     "Geography",
-    ["France", "Germany", "Spain"]
+    ["France","Germany","Spain"]
+)
+
+st.sidebar.markdown("---")
+
+predict_btn = st.sidebar.button(
+    "🚀 Predict Churn Risk",
+    use_container_width=True
+)
+
+# =====================================
+# TABS
+# =====================================
+
+tab1, tab2, tab3 = st.tabs(
+    [
+        "📊 Prediction",
+        "📈 Analytics",
+        "🔍 What-If Analysis"
+    ]
 )
 
 # =====================================
@@ -126,10 +179,6 @@ geo_germany = 1 if geography == "Germany" else 0
 geo_spain = 1 if geography == "Spain" else 0
 
 gender_male = 1 if gender == "Male" else 0
-
-# =====================================
-# INPUT DATAFRAME
-# =====================================
 
 input_df = pd.DataFrame({
     "Year":[year],
@@ -157,209 +206,233 @@ input_df = pd.DataFrame({
 # PREDICTION
 # =====================================
 
-if st.button("Predict Churn Risk"):
+if predict_btn:
 
-    st.session_state.probability = model.predict_proba(input_df)[0][1]
-
-    prediction = model.predict(input_df)[0]
-
-    st.subheader("Prediction Results")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        st.metric(
-            "Churn Probability",
-            f"{st.session_state.probability:.2%}"
-        )
-
-    with col2:
-
-        st.metric(
-            "Binary Prediction",
-            "Churn" if prediction == 1 else "Retain"
-        )
-
-    # =====================================
-    # RISK LEVEL
-    # =====================================
-
-    if st.session_state.probability < 0.30:
-        st.success("🟢 Low Risk Customer")
-
-    elif st.session_state.probability < 0.60:
-        st.warning("🟠 Medium Risk Customer")
-
-    else:
-        st.error("🔴 High Risk Customer")
-
-    # =====================================
-    # GAUGE CHART
-    # =====================================
-
-    st.subheader("Churn Risk Score")
-
-    fig = go.Figure(
-
-        go.Indicator(
-
-            mode="gauge+number",
-
-            value=st.session_state.probability * 100,
-
-            title={"text": "Risk Score (%)"},
-
-            gauge={
-                "axis": {"range": [0, 100]},
-                "bar": {"color": "darkblue"},
-                "steps": [
-                    {"range": [0, 30], "color": "lightgreen"},
-                    {"range": [30, 60], "color": "orange"},
-                    {"range": [60, 100], "color": "red"}
-                ]
-            }
-        )
-    )
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
-
-    # =====================================
-    # PROBABILITY DISTRIBUTION
-    # =====================================
-
-    st.subheader("Probability Distribution")
-
-    prob_df = pd.DataFrame({
-
-        "Category":["Retain", "Churn"],
-
-        "Probability":[
-            1 - st.session_state.probability,
-            st.session_state.probability
-        ]
-    })
-
-    fig2 = px.pie(
-        prob_df,
-        names="Category",
-        values="Probability",
-        hole=0.5,
-        title="Retention vs Churn Probability"
-    )
-
-    st.plotly_chart(
-        fig2,
-        use_container_width=True
-    )
-
-    # =====================================
-    # FEATURE IMPORTANCE
-    # =====================================
-
-    st.subheader("Feature Importance Dashboard")
-
-    importance_df = pd.DataFrame({
-
-        "Feature": model.feature_names_in_,
-
-        "Importance": model.feature_importances_
-
-    })
-
-    importance_df = importance_df.sort_values(
-        by="Importance",
-        ascending=False
-    )
-
-    fig3 = px.bar(
-        importance_df.head(10),
-        x="Importance",
-        y="Feature",
-        orientation="h",
-        title="Top 10 Important Features"
-    )
-
-    st.plotly_chart(
-        fig3,
-        use_container_width=True
-    )
-
-    # =====================================
-# WHAT-IF ANALYSIS
-# =====================================
-
-st.subheader("What-If Scenario Simulator")
-
-# Initialize session state only once
-if "new_products" not in st.session_state:
-    st.session_state.new_products = int(products)
-
-if "new_active" not in st.session_state:
-    st.session_state.new_active = int(active_member)
-
-with st.form("what_if_form"):
-
-    new_products = st.slider(
-        "Adjust Number of Products",
-        min_value=1,
-        max_value=4,
-        value=st.session_state.new_products
-    )
-
-    new_active = st.selectbox(
-        "Adjust Active Membership",
-        options=[0, 1],
-        index=st.session_state.new_active
-    )
-
-    run_simulation = st.form_submit_button(
-        "Run Simulation"
-    )
-
-# Save selected values
-st.session_state.new_products = new_products
-st.session_state.new_active = new_active
-
-# Run prediction
-if run_simulation:
-
-    scenario_df = input_df.copy()
-
-    scenario_df["NumOfProducts"] = new_products
-    scenario_df["IsActiveMember"] = new_active
-
-    scenario_df["ProductDensity"] = (
-        new_products / (tenure + 1)
-    )
-
-    scenario_df["EngagementProduct"] = (
-        new_products * new_active
-    )
-
-    scenario_probability = model.predict_proba(
-        scenario_df
+    st.session_state.probability = model.predict_proba(
+        input_df
     )[0][1]
 
-    st.metric(
-        "Updated Churn Probability",
-        f"{scenario_probability:.2%}"
-    )
-    
-    if st.session_state.probability is not None:
-        change = (
-            scenario_probability - st.session_state.probability
-        ) * 100
+    prediction = model.predict(
+        input_df
+    )[0]
 
-        st.write(
-            f"Change in Risk: {change:.2f}%"
+    # -------------------------
+    # TAB 1
+    # -------------------------
+
+    with tab1:
+
+        st.subheader("Prediction Summary")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                "Churn Probability",
+                f"{st.session_state.probability:.2%}"
+            )
+
+        with col2:
+            st.metric(
+                "Prediction",
+                "Churn" if prediction == 1 else "Retain"
+            )
+
+        with col3:
+            st.metric(
+                "Retention Score",
+                f"{(1-st.session_state.probability):.2%}"
+            )
+
+        st.markdown("---")
+
+        if st.session_state.probability < 0.30:
+            st.success("🟢 Low Risk Customer")
+
+        elif st.session_state.probability < 0.60:
+            st.warning("🟠 Medium Risk Customer")
+
+        else:
+            st.error("🔴 High Risk Customer")
+
+        st.info(f"""
+### Customer Summary
+
+- Age: {age}
+- Credit Score: {credit_score}
+- Products: {products}
+- Geography: {geography}
+- Active Member: {'Yes' if active_member else 'No'}
+        """)
+
+        st.subheader("🎯 Retention Recommendations")
+
+        if st.session_state.probability > 0.60:
+            st.error("""
+• Offer Loyalty Rewards
+
+• Assign Relationship Manager
+
+• Personalized Retention Campaign
+            """)
+
+        elif st.session_state.probability > 0.30:
+            st.warning("""
+• Increase Customer Engagement
+
+• Offer Additional Banking Products
+            """)
+
+        else:
+            st.success("""
+• Customer Likely To Stay
+
+• Continue Standard Engagement
+            """)
+
+    # -------------------------
+    # TAB 2
+    # -------------------------
+
+    with tab2:
+
+        st.subheader("Risk Analytics")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            gauge_fig = go.Figure(
+                go.Indicator(
+                    mode="gauge+number",
+                    value=st.session_state.probability * 100,
+                    title={"text":"Risk Score (%)"},
+                    gauge={
+                        "axis":{"range":[0,100]},
+                        "bar":{"color":"#1E3A8A"},
+                        "steps":[
+                            {"range":[0,30],"color":"#D1FAE5"},
+                            {"range":[30,60],"color":"#FDE68A"},
+                            {"range":[60,100],"color":"#FCA5A5"}
+                        ]
+                    }
+                )
+            )
+
+            st.plotly_chart(
+                gauge_fig,
+                use_container_width=True
+            )
+
+        with col2:
+
+            prob_df = pd.DataFrame({
+                "Category":["Retain","Churn"],
+                "Probability":[
+                    1-st.session_state.probability,
+                    st.session_state.probability
+                ]
+            })
+
+            pie_fig = px.pie(
+                prob_df,
+                names="Category",
+                values="Probability",
+                hole=0.55
+            )
+
+            st.plotly_chart(
+                pie_fig,
+                use_container_width=True
+            )
+
+        st.subheader("Top Feature Importance")
+
+        importance_df = pd.DataFrame({
+            "Feature": model.feature_names_in_,
+            "Importance": model.feature_importances_
+        })
+
+        importance_df = importance_df.sort_values(
+            "Importance",
+            ascending=False
         )
-    else:
-        st.warning("Please run the initial prediction first to see the change in risk.")
 
-# Debug (remove later)
-st.write("Current Products:", st.session_state.new_products)
-st.write("Current Active Member:", st.session_state.new_active)
+        bar_fig = px.bar(
+            importance_df.head(10),
+            x="Importance",
+            y="Feature",
+            orientation="h"
+        )
+
+        bar_fig.update_layout(
+            template="plotly_white",
+            height=500
+        )
+
+        st.plotly_chart(
+            bar_fig,
+            use_container_width=True
+        )
+
+# =====================================
+# WHAT IF ANALYSIS
+# =====================================
+
+with tab3:
+
+    st.subheader("🔍 What-If Scenario Simulator")
+
+    with st.form("what_if_form"):
+
+        new_products = st.slider(
+            "Adjust Products",
+            1,
+            4,
+            products
+        )
+
+        new_active = st.selectbox(
+            "Adjust Active Membership",
+            [0,1]
+        )
+
+        run_simulation = st.form_submit_button(
+            "Run Simulation"
+        )
+
+    if run_simulation:
+
+        scenario_df = input_df.copy()
+
+        scenario_df["NumOfProducts"] = new_products
+        scenario_df["IsActiveMember"] = new_active
+
+        scenario_df["ProductDensity"] = (
+            new_products / (tenure + 1)
+        )
+
+        scenario_df["EngagementProduct"] = (
+            new_products * new_active
+        )
+
+        scenario_probability = model.predict_proba(
+            scenario_df
+        )[0][1]
+
+        st.metric(
+            "Updated Churn Probability",
+            f"{scenario_probability:.2%}"
+        )
+
+        if st.session_state.probability is not None:
+
+            change = (
+                scenario_probability
+                - st.session_state.probability
+            ) * 100
+
+            st.metric(
+                "Risk Change",
+                f"{change:.2f}%"
+            )
